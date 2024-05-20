@@ -2,68 +2,25 @@
 
 namespace TestProject2;
 
-public class MyTagKey
-{
-    public string Key { get; set; }
-    public int? Index { get; set; }
-    public string? PropertyName { get; set; }
-    public string? PropertyValue { get; set; }
-
-    public MyTagKey(string key)
-    {
-        Key = key;
-    }
-
-    public static MyTagKey? Parse(string? key)
-    {
-        if (string.IsNullOrWhiteSpace(key))
-        {
-            return null;
-        }
-
-        var myTagKey = new MyTagKey(key);
-        var match = Regex.Match(key, @"^(?<key>\w+)(\[(?<index>\d+)\])$|^(?<key>\w+)(\[(?<index>\d+)\])\.(?<property>\w+)|^(?<key>\w+)(\[(?<property>\w+)=(?<propertyValue>\w+)\])$");
-
-        if (match.Success)
-        {
-            myTagKey.Key = match.Groups["key"].Value;
-            myTagKey.Index = match.Groups["index"].Success ? int.Parse(match.Groups["index"].Value) : null;
-            myTagKey.PropertyName = match.Groups["property"].Success ? NullIfEmpty(match.Groups["property"].Value) : null;
-            myTagKey.PropertyValue = match.Groups["propertyValue"].Success ? NullIfEmpty(match.Groups["propertyValue"].Value) : null;
-        }
-
-        string? NullIfEmpty(string? data)
-        {
-            if (string.IsNullOrWhiteSpace(data))
-            {
-                return null;
-            }
-
-            return data;
-        }
-
-        return myTagKey;
-    }
-}
-
 public class TagKeyTests
 {
     [Fact]
     public void ParseKey()
     {
-        var result = MyTagKey.Parse("Tag");
+        var result = TagHelper.TagKey.Parse("Tag");
 
         Assert.NotNull(result);
         Assert.Equal("Tag", result.Key);
         Assert.Null(result.Index);
         Assert.Null(result.PropertyName);
-        Assert.Null(result.PropertyValue);
+        Assert.Null(result.IndexPropertyName);
+        Assert.Null(result.IndexPropertyValue);
     }
 
     [Fact]
     public void ParseKeyNull()
     {
-        var result = MyTagKey.Parse(null);
+        var result = TagHelper.TagKey.Parse(null);
 
         Assert.Null(result);
     }
@@ -71,7 +28,7 @@ public class TagKeyTests
     [Fact]
     public void ParseKeyEmpty()
     {
-        var result = MyTagKey.Parse("");
+        var result = TagHelper.TagKey.Parse("");
 
         Assert.Null(result);
     }
@@ -79,36 +36,51 @@ public class TagKeyTests
     [Fact]
     public void ParseKeyIndex()
     {
-        var result = MyTagKey.Parse("Tag[2]");
+        var result = TagHelper.TagKey.Parse("Tag[2]");
 
         Assert.NotNull(result);
         Assert.Equal("Tag", result.Key);
         Assert.Equal(2, result.Index);
         Assert.Null(result.PropertyName);
-        Assert.Null(result.PropertyValue);
+        Assert.Null(result.IndexPropertyName);
+        Assert.Null(result.IndexPropertyValue);
     }
 
     [Fact]
     public void ParseKeyProperty()
     {
-        var result = MyTagKey.Parse("Tag[2].Description");
+        var result = TagHelper.TagKey.Parse("Tag[2].Description");
 
         Assert.NotNull(result);
         Assert.Equal("Tag", result.Key);
         Assert.Equal(2, result.Index);
         Assert.Equal("Description", result.PropertyName);
-        Assert.Null(result.PropertyValue);
+        Assert.Null(result.IndexPropertyName);
+        Assert.Null(result.IndexPropertyValue);
     }
 
     [Fact]
     public void ParseKeyPropertyByValue()
     {
-        var result = MyTagKey.Parse("Tag[Name=Test]");
+        var result = TagHelper.TagKey.Parse("Tag[Name=Test]");
 
         Assert.NotNull(result);
         Assert.Equal("Tag", result.Key);
         Assert.Null(result.Index);
-        Assert.Equal("Name", result.PropertyName);
-        Assert.Equal("Test", result.PropertyValue);
+        Assert.Equal("Name", result.IndexPropertyName);
+        Assert.Equal("Test", result.IndexPropertyValue);
+    }
+
+    [Fact]
+    public void ParseKeyPropertyByValueProperty()
+    {
+        var result = TagHelper.TagKey.Parse("Tag[Name=Test].Description");
+
+        Assert.NotNull(result);
+        Assert.Equal("Tag", result.Key);
+        Assert.Null(result.Index);
+        Assert.Equal("Name", result.IndexPropertyName);
+        Assert.Equal("Test", result.IndexPropertyValue);
+        Assert.Equal("Description", result.PropertyName);
     }
 }
