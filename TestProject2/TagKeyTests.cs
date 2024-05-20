@@ -22,40 +22,14 @@ public class MyTagKey
         }
 
         var myTagKey = new MyTagKey(key);
+        var match = Regex.Match(key, @"^(?<key>\w+)(\[(?<index>\d+)\])$|^(?<key>\w+)(\[(?<index>\d+)\])\.(?<property>\w+)|^(?<key>\w+)(\[(?<property>\w+)=(?<propertyValue>\w+)\])$");
 
-
-        var propertyVal = Regex.Match(key, @"^(?<key>\w+)(\[(?<property>\w+)=(?<propertyValue>\w+)\])$");
-
-        if (propertyVal.Success)
+        if (match.Success)
         {
-            myTagKey.Key = propertyVal.Groups["key"].Value;
-            myTagKey.Index = null;
-            myTagKey.PropertyName = NullIfEmpty(propertyVal.Groups["property"].Value);
-            myTagKey.PropertyValue = propertyVal.Groups["propertyValue"].Value;
-        }
-        else
-        {
-            var indexProp = Regex.Match(key, @"^(?<key>\w+)(\[(?<index>\d+)\])\.(?<property>\w+)");
-
-            if (indexProp.Success)
-            {
-                myTagKey.Key = indexProp.Groups["key"].Value;
-                myTagKey.Index = int.Parse(indexProp.Groups["index"].Value);
-                myTagKey.PropertyName = NullIfEmpty(indexProp.Groups["property"].Value);
-                myTagKey.PropertyValue = null;
-            }
-            else
-            {
-                var index = Regex.Match(key, @"^(?<key>\w+)(\[(?<index>\d+)\])$");
-
-                if (index.Success)
-                {
-                    myTagKey.Key = index.Groups["key"].Value;
-                    myTagKey.Index = int.Parse(index.Groups["index"].Value);
-                    myTagKey.PropertyName = null;
-                    myTagKey.PropertyValue = null;
-                }
-            }
+            myTagKey.Key = match.Groups["key"].Value;
+            myTagKey.Index = match.Groups["index"].Success ? int.Parse(match.Groups["index"].Value) : null;
+            myTagKey.PropertyName = match.Groups["property"].Success ? NullIfEmpty(match.Groups["property"].Value) : null;
+            myTagKey.PropertyValue = match.Groups["propertyValue"].Success ? NullIfEmpty(match.Groups["propertyValue"].Value) : null;
         }
 
         string? NullIfEmpty(string? data)
